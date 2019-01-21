@@ -1997,13 +1997,13 @@ void initGamePlayerPythonScripting(Main *maggie, int argc, char** argv)
 		Py_DECREF(mod);
 	}
 
-#ifdef WITH_AUDASPACE
-	/* accessing a SoundActuator's sound results in a crash if aud is not initialized... */
-	{
-		PyObject *mod = PyImport_ImportModuleLevel("aud", nullptr, nullptr, nullptr, 0);
-		Py_DECREF(mod);
-	}
-#endif
+//#ifdef WITH_AUDASPACE
+//	/* accessing a SoundActuator's sound results in a crash if aud is not initialized... */
+//	{
+//		PyObject *mod = PyImport_ImportModuleLevel("aud", nullptr, nullptr, nullptr, 0);
+//		Py_DECREF(mod);
+//	}
+//#endif
 
 	PyDict_SetItemString(PyImport_GetModuleDict(), "bge", initBGE());
 
@@ -2049,13 +2049,13 @@ void initGamePythonScripting(Main *maggie)
 
 	initPySysObjects(maggie);
 
-#ifdef WITH_AUDASPACE
-	/* accessing a SoundActuator's sound results in a crash if aud is not initialized... */
-	{
-		PyObject *mod= PyImport_ImportModuleLevel("aud", nullptr, nullptr, nullptr, 0);
-		Py_DECREF(mod);
-	}
-#endif
+//#ifdef WITH_AUDASPACE
+//	/* accessing a SoundActuator's sound results in a crash if aud is not initialized... */
+//	{
+//		PyObject *mod= PyImport_ImportModuleLevel("aud", nullptr, nullptr, nullptr, 0);
+//		Py_DECREF(mod);
+//	}
+//#endif
 
 	PyDict_SetItemString(PyImport_GetModuleDict(), "bge", initBGE());
 
