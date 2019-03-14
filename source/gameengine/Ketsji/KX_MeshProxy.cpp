@@ -52,6 +52,12 @@
 #include "EXP_PyObjectPlus.h"
 #include "EXP_ListWrapper.h"
 
+extern "C" {
+#  include "BKE_mesh.h"
+#  include "DNA_meshdata_types.h"
+#  include "DNA_mesh_types.h"
+}
+
 PyTypeObject KX_MeshProxy::Type = {
 	PyVarObject_HEAD_INIT(nullptr, 0)
 	"KX_MeshProxy",
@@ -78,7 +84,13 @@ PyMethodDef KX_MeshProxy::Methods[] = {
 	{"getMaterialName", (PyCFunction) KX_MeshProxy::sPyGetMaterialName, METH_VARARGS},
 	{"getTextureName", (PyCFunction) KX_MeshProxy::sPyGetTextureName, METH_VARARGS},
 	{"getVertexArrayLength", (PyCFunction) KX_MeshProxy::sPyGetVertexArrayLength, METH_VARARGS},
+
+	{"getBlenderVertexArrayLength", (PyCFunction)KX_MeshProxy::sPyGetBlenderVertexArrayLength, METH_VARARGS},
+
 	{"getVertex", (PyCFunction) KX_MeshProxy::sPyGetVertex, METH_VARARGS},
+
+	{"getBlenderVertex", (PyCFunction)KX_MeshProxy::sPyGetBlenderVertex, METH_VARARGS},
+
 	{"getPolygon", (PyCFunction) KX_MeshProxy::sPyGetPolygon, METH_VARARGS},
 	{"transform", (PyCFunction) KX_MeshProxy::sPyTransform, METH_VARARGS},
 	{"transformUV", (PyCFunction) KX_MeshProxy::sPyTransformUV, METH_VARARGS},
@@ -161,6 +173,15 @@ PyObject *KX_MeshProxy::PyGetVertexArrayLength(PyObject *args, PyObject *kwds)
 	return PyLong_FromLong(length);
 }
 
+PyObject *KX_MeshProxy::PyGetBlenderVertexArrayLength(PyObject *args, PyObject *kwds)
+{
+	Mesh *me = m_meshobj->GetMesh();
+
+	int length = me->totvert;
+
+	return PyLong_FromLong(length);
+}
+
 PyObject *KX_MeshProxy::PyGetVertex(PyObject *args, PyObject *kwds)
 {
 	int vertexindex;
@@ -178,6 +199,19 @@ PyObject *KX_MeshProxy::PyGetVertex(PyObject *args, PyObject *kwds)
 	RAS_ITexVert *vertex = array->GetVertex(vertexindex);
 
 	return (new KX_VertexProxy(array, vertex))->NewProxy(true);
+}
+
+PyObject *KX_MeshProxy::PyGetBlenderVertex(PyObject *args, PyObject *kwds)
+{
+	int vertexindex;
+
+	if (!PyArg_ParseTuple(args, "i:getBlenderVertex", &vertexindex))
+		return nullptr;
+
+	Mesh *me = m_meshobj->GetMesh();
+	MVert *vert = &me->mvert[vertexindex];
+
+	return (new KX_VertexProxy(vert, me))->NewProxy(true);
 }
 
 PyObject *KX_MeshProxy::PyGetPolygon(PyObject *args, PyObject *kwds)

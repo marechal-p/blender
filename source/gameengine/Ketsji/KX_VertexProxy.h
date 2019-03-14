@@ -47,8 +47,12 @@ protected:
 	RAS_ITexVert *m_vertex;
 	RAS_IDisplayArray *m_array;
 
+	struct MVert *m_mvert;
+	struct Mesh *m_mesh;
+
 public:
 	KX_VertexProxy(RAS_IDisplayArray *array, RAS_ITexVert *vertex);
+	KX_VertexProxy(struct MVert *vert, struct Mesh *me);
 	virtual ~KX_VertexProxy();
 
 	RAS_ITexVert *GetVertex();
@@ -69,6 +73,9 @@ public:
 	static PyObject *pyattr_get_u2(PyObjectPlus *self_v, const KX_PYATTRIBUTE_DEF *attrdef);
 	static PyObject *pyattr_get_v2(PyObjectPlus *self_v, const KX_PYATTRIBUTE_DEF *attrdef);
 	static PyObject *pyattr_get_XYZ(PyObjectPlus *self_v, const KX_PYATTRIBUTE_DEF *attrdef);
+
+	static PyObject *pyattr_get_co(PyObjectPlus *self_v, const KX_PYATTRIBUTE_DEF *attrdef);
+
 	static PyObject *pyattr_get_UV(PyObjectPlus *self_v, const KX_PYATTRIBUTE_DEF *attrdef);
 	static PyObject *pyattr_get_color(PyObjectPlus *self_v, const KX_PYATTRIBUTE_DEF *attrdef);
 	static PyObject *pyattr_get_colors(PyObjectPlus *self_v, const KX_PYATTRIBUTE_DEF *attrdef);
@@ -86,6 +93,9 @@ public:
 	static int pyattr_set_b(PyObjectPlus *self, const KX_PYATTRIBUTE_DEF *attrdef, PyObject *value);
 	static int pyattr_set_a(PyObjectPlus *self, const KX_PYATTRIBUTE_DEF *attrdef, PyObject *value);
 	static int pyattr_set_XYZ(PyObjectPlus *self, const KX_PYATTRIBUTE_DEF *attrdef, PyObject *value);
+
+	static int pyattr_set_co(PyObjectPlus *self, const KX_PYATTRIBUTE_DEF *attrdef, PyObject *value);
+
 	static int pyattr_set_UV(PyObjectPlus *self, const KX_PYATTRIBUTE_DEF *attrdef, PyObject *value);
 	static int pyattr_set_color(PyObjectPlus *self, const KX_PYATTRIBUTE_DEF *attrdef, PyObject *value);
 	static int pyattr_set_colors(PyObjectPlus *self, const KX_PYATTRIBUTE_DEF *attrdef, PyObject *value);

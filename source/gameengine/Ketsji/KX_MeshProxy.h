@@ -69,7 +69,13 @@ public:
 
 	// both take materialid (int)
 	KX_PYMETHOD(KX_MeshProxy, GetVertexArrayLength);
+
+	KX_PYMETHOD(KX_MeshProxy, GetBlenderVertexArrayLength);
+
 	KX_PYMETHOD(KX_MeshProxy, GetVertex);
+
+	KX_PYMETHOD(KX_MeshProxy, GetBlenderVertex);
+
 	KX_PYMETHOD(KX_MeshProxy, GetPolygon);
 	KX_PYMETHOD(KX_MeshProxy, Transform);
 	KX_PYMETHOD(KX_MeshProxy, TransformUV);

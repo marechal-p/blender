@@ -138,7 +138,7 @@ public:
 		return true;
 	}
 
-	bool SetMesh(class RAS_MeshObject *mesh, struct DerivedMesh *dm, bool polytope);
+	bool SetMesh(class RAS_MeshObject *mesh, struct DerivedMesh *dm, bool polytope, struct Object *ob);
 	RAS_MeshObject *GetMesh(void)
 	{
 		return m_meshObject;

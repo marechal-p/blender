@@ -274,6 +274,10 @@ void KX_GameObject::TagForUpdate()
 			}
 		}
 
+		if (m_pPhysicsController) {
+			m_pPhysicsController->ReinstancePhysicsShape(this, m_meshes[0], false);
+		}
+
 		if (!m_staticObject && ELEM(ob->type, OB_MESH, OB_CURVE, OB_SURF, OB_FONT, OB_MBALL)) {
 			if (m_castShadows) {
 				EEVEE_ObjectEngineData *oedata = EEVEE_object_data_ensure(ob);

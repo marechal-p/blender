@@ -2894,7 +2894,7 @@ void CcdPhysicsEnvironment::ConvertObject(KX_BlenderSceneConverter& converter, K
 		}
 		case OB_BOUND_CONVEX_HULL:
 		{
-			shapeInfo->SetMesh(meshobj, dm, true);
+			shapeInfo->SetMesh(meshobj, dm, true, blenderobject);
 			bm = shapeInfo->CreateBulletShape(ci.m_margin);
 			break;
 		}
@@ -2918,7 +2918,7 @@ void CcdPhysicsEnvironment::ConvertObject(KX_BlenderSceneConverter& converter, K
 				shapeInfo->AddRef();
 			}
 			else {
-				shapeInfo->SetMesh(meshobj, dm, false);
+				shapeInfo->SetMesh(meshobj, dm, false, blenderobject);
 			}
 
 			// Soft bodies can benefit from welding, don't do it on non-soft bodies

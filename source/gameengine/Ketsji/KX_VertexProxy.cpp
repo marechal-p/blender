@@ -42,6 +42,12 @@
 
 #include <boost/format.hpp>
 
+extern "C" {
+#  include "DNA_mesh_types.h"
+#  include "DNA_meshdata_types.h"
+#  include "depsgraph/DEG_depsgraph.h"
+}
+
 PyTypeObject KX_VertexProxy::Type = {
 	PyVarObject_HEAD_INIT(nullptr, 0)
 	"KX_VertexProxy",
@@ -97,6 +103,9 @@ PyAttributeDef KX_VertexProxy::Attributes[] = {
 	KX_PYATTRIBUTE_RW_FUNCTION("v2", KX_VertexProxy, pyattr_get_v2, pyattr_set_v2),
 
 	KX_PYATTRIBUTE_RW_FUNCTION("XYZ", KX_VertexProxy, pyattr_get_XYZ, pyattr_set_XYZ),
+
+	KX_PYATTRIBUTE_RW_FUNCTION("co", KX_VertexProxy, pyattr_get_co, pyattr_set_co),
+
 	KX_PYATTRIBUTE_RW_FUNCTION("UV", KX_VertexProxy, pyattr_get_UV, pyattr_set_UV),
 	KX_PYATTRIBUTE_RW_FUNCTION("uvs", KX_VertexProxy, pyattr_get_uvs, pyattr_set_uvs),
 
@@ -178,6 +187,19 @@ PyObject *KX_VertexProxy::pyattr_get_XYZ(PyObjectPlus *self_v, const KX_PYATTRIB
 	KX_VertexProxy *self = static_cast<KX_VertexProxy *>(self_v);
 	return PyObjectFrom(MT_Vector3(self->m_vertex->getXYZ()));
 }
+
+
+
+PyObject *KX_VertexProxy::pyattr_get_co(PyObjectPlus *self_v, const KX_PYATTRIBUTE_DEF *attrdef)
+{
+	KX_VertexProxy *self = static_cast<KX_VertexProxy *>(self_v);
+	return PyObjectFrom(MT_Vector3(self->m_mvert->co));
+}
+
+
+
+
+
 
 PyObject *KX_VertexProxy::pyattr_get_UV(PyObjectPlus *self_v, const KX_PYATTRIBUTE_DEF *attrdef)
 {
@@ -453,6 +475,24 @@ int KX_VertexProxy::pyattr_set_XYZ(PyObjectPlus *self_v, const struct KX_PYATTRI
 	return PY_SET_ATTR_FAIL;
 }
 
+
+int KX_VertexProxy::pyattr_set_co(PyObjectPlus *self_v, const struct KX_PYATTRIBUTE_DEF *attrdef, PyObject *value)
+{
+	KX_VertexProxy *self = static_cast<KX_VertexProxy *>(self_v);
+	if (PySequence_Check(value)) {
+		MT_Vector3 vec;
+		if (PyVecTo(value, vec)) {
+			copy_v3_v3(self->m_mvert->co, vec.getValue());
+			DEG_id_tag_update(&self->m_mesh->id, ID_RECALC_GEOMETRY);
+			return PY_SET_ATTR_SUCCESS;
+		}
+	}
+	return PY_SET_ATTR_FAIL;
+}
+
+
+
+
 int KX_VertexProxy::pyattr_set_UV(PyObjectPlus *self_v, const struct KX_PYATTRIBUTE_DEF *attrdef, PyObject *value)
 {
 	KX_VertexProxy *self = static_cast<KX_VertexProxy *>(self_v);
@@ -539,7 +579,17 @@ int KX_VertexProxy::pyattr_set_normal(PyObjectPlus *self_v, const struct KX_PYAT
 
 KX_VertexProxy::KX_VertexProxy(RAS_IDisplayArray *array, RAS_ITexVert *vertex)
 	:m_vertex(vertex),
-	m_array(array)
+	m_array(array),
+	m_mvert(nullptr),
+	m_mesh(nullptr)
+{
+}
+
+KX_VertexProxy::KX_VertexProxy(MVert *vert, Mesh *me)
+	: m_vertex(nullptr),
+	m_array(nullptr),
+	m_mvert(vert),
+	m_mesh(me)
 {
 }
 

@@ -64,11 +64,10 @@ void BKE_mesh_runtime_verttri_from_looptri(
  * to a more suitable location when that file is removed.
  * They should also be renamed to use conventions from BKE, not old DerivedMesh.c.
  * For now keep the names similar to avoid confusion. */
-#ifdef USE_DERIVEDMESH
 struct DerivedMesh *mesh_get_derived_final(
         struct Depsgraph *depsgraph, struct Scene *scene,
         struct Object *ob, const struct CustomData_MeshMasks *dataMask);
-#endif
+
 struct Mesh *mesh_get_eval_final(
         struct Depsgraph *depsgraph, struct Scene *scene, struct Object *ob, const struct CustomData_MeshMasks *dataMask);
 

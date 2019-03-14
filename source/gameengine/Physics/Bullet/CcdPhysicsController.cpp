@@ -50,6 +50,9 @@
 extern "C" {
 	#include "BLI_utildefines.h"
 	#include "BKE_cdderivedmesh.h"
+    #include "BKE_mesh_runtime.h"
+    #include "BKE_layer.h"
+    #include "BKE_scene.h"
 }
 
 
@@ -1635,8 +1638,8 @@ bool CcdPhysicsController::ReinstancePhysicsShape(KX_GameObject *from_gameobj, R
 	}
 
 	/* updates the arrays used for making the new bullet mesh */
-	m_shapeInfo->UpdateMesh(from_gameobj);
-
+	//m_shapeInfo->UpdateMesh(from_gameobj);
+	m_shapeInfo->SetMesh(from_meshobj, nullptr, false, from_gameobj->GetBlenderObject());
 	/* create the new bullet mesh */
 	GetPhysicsEnvironment()->UpdateCcdPhysicsControllerShape(m_shapeInfo);
 
@@ -1765,7 +1768,7 @@ void CcdShapeConstructionInfo::ProcessReplica()
 	m_shapeArray.clear();
 }
 
-bool CcdShapeConstructionInfo::SetMesh(RAS_MeshObject *meshobj, DerivedMesh *dm, bool polytope)
+bool CcdShapeConstructionInfo::SetMesh(RAS_MeshObject *meshobj, DerivedMesh *dm, bool polytope, Object *ob)
 {
 	int numpolys, numverts;
 
@@ -1785,9 +1788,16 @@ bool CcdShapeConstructionInfo::SetMesh(RAS_MeshObject *meshobj, DerivedMesh *dm,
 		return false;
 	}
 
-	if (!dm) {
+	if (!dm && ob) {
 		free_dm = true;
-		dm = CDDM_from_mesh(meshobj->GetMesh());
+		Scene *scene = KX_GetActiveScene()->GetBlenderScene();
+		ViewLayer *view_layer = BKE_view_layer_default_view(scene);
+		Depsgraph *depsgraph = BKE_scene_get_depsgraph(scene, view_layer, false);
+		dm = mesh_get_derived_final(depsgraph, scene, ob, &CD_MASK_MESH);
+	}
+	else if (!dm) {
+		free_dm = true;
+		dm = CDDM_from_mesh(m_meshObject->GetMesh());
 	}
 
 	// Some meshes with modifiers returns 0 polys, call DM_ensure_tessface avoid this.

@@ -2338,6 +2338,62 @@ static void mesh_build_data(
 	mesh_build_extra_data(depsgraph, ob);
 }
 
+static void mesh_build_derived_data(
+	struct Depsgraph *depsgraph, Scene *scene, Object *ob, const CustomData_MeshMasks *dataMask,
+	const bool build_shapekey_layers, const bool need_mapping)
+{
+	BLI_assert(ob->type == OB_MESH);
+
+	/* Evaluated meshes aren't supposed to be created on original instances. If you do,
+	 * they aren't cleaned up properly on mode switch, causing crashes, e.g T58150. */
+	BLI_assert(ob->id.tag & LIB_TAG_COPIED_ON_WRITE);
+
+	BKE_object_free_derived_caches(ob);
+	BKE_object_sculpt_modifiers_changed(ob);
+
+#if 0 /* XXX This is already taken care of in mesh_calc_modifiers()... */
+	if (need_mapping) {
+		/* Also add the flag so that it is recorded in lastDataMask. */
+		dataMask->vmask |= CD_MASK_ORIGINDEX;
+		dataMask->emask |= CD_MASK_ORIGINDEX;
+		dataMask->pmask |= CD_MASK_ORIGINDEX;
+	}
+#endif
+
+	mesh_calc_modifiers(
+		depsgraph, scene, ob, NULL, 1, need_mapping, dataMask, -1, true, build_shapekey_layers,
+		&ob->runtime.mesh_deform_eval, &ob->runtime.mesh_eval);
+
+	/* TODO(campbell): remove these copies, they are expected in various places over the code. */
+	ob->derivedDeform = CDDM_from_mesh_ex(ob->runtime.mesh_deform_eval, CD_REFERENCE, &CD_MASK_MESH);
+	ob->derivedFinal = CDDM_from_mesh_ex(ob->runtime.mesh_eval, CD_REFERENCE, &CD_MASK_MESH);
+
+	BKE_object_boundbox_calc_from_mesh(ob, ob->runtime.mesh_eval);
+	/* Only copy texspace from orig mesh if some modifier (hint: smoke sim, see T58492)
+	 * did not re-enable that flag (which always get disabled for eval mesh as a start). */
+	if (!(ob->runtime.mesh_eval->texflag & ME_AUTOSPACE)) {
+		BKE_mesh_texspace_copy_from_object(ob->runtime.mesh_eval, ob);
+	}
+
+	mesh_finalize_eval(ob);
+
+	ob->derivedFinal->needsFree = 0;
+	ob->derivedDeform->needsFree = 0;
+	ob->runtime.last_data_mask = *dataMask;
+	ob->runtime.last_need_mapping = need_mapping;
+
+	if ((ob->mode & OB_MODE_ALL_SCULPT) && ob->sculpt) {
+		/* create PBVH immediately (would be created on the fly too,
+		 * but this avoids waiting on first stroke) */
+		 /* XXX Disabled for now.
+		  * This can create horrible nasty bugs by generating re-entrant call of mesh_get_eval_final! */
+		  //		BKE_sculpt_update_mesh_elements(depsgraph, scene, scene->toolsettings->sculpt, ob, false, false);
+	}
+
+	mesh_runtime_check_normals_valid(ob->runtime.mesh_eval);
+	mesh_build_extra_data(depsgraph, ob);
+}
+
 static void editbmesh_build_data(
         struct Depsgraph *depsgraph, Scene *scene,
         Object *obedit, BMEditMesh *em, CustomData_MeshMasks *dataMask)
@@ -2423,7 +2479,6 @@ void makeDerivedMesh(
 
 /***/
 
-#ifdef USE_DERIVEDMESH
 /* Deprecated DM, use: 'mesh_get_eval_final'. */
 DerivedMesh *mesh_get_derived_final(
         struct Depsgraph *depsgraph, Scene *scene, Object *ob, const CustomData_MeshMasks *dataMask)
@@ -2435,17 +2490,16 @@ DerivedMesh *mesh_get_derived_final(
 	CustomData_MeshMasks cddata_masks = *dataMask;
 	object_get_datamask(depsgraph, ob, &cddata_masks, &need_mapping);
 
-	if (!ob->derivedFinal ||
-	    !CustomData_MeshMasks_are_matching(&(ob->lastDataMask), &cddata_masks) ||
-	    (need_mapping != ob->lastNeedMapping))
+	//if (!ob->derivedFinal)
 	{
-		mesh_build_data(depsgraph, scene, ob, cddata_masks, false, need_mapping);
+		mesh_build_derived_data(depsgraph, scene, ob, &cddata_masks, false, need_mapping);
 	}
 
 	if (ob->derivedFinal) { BLI_assert(!(ob->derivedFinal->dirty & DM_DIRTY_NORMALS)); }
 	return ob->derivedFinal;
 }
-#endif
+
+
 Mesh *mesh_get_eval_final(struct Depsgraph *depsgraph, Scene *scene, Object *ob, const CustomData_MeshMasks *dataMask)
 {
 	/* This function isn't thread-safe and can't be used during evaluation. */
@@ -2736,7 +2790,6 @@ Mesh *editbmesh_get_eval_cage_from_orig(
 /***/
 
 /* UNUSED */
-#if 0
 
 /* ********* For those who don't grasp derived stuff! (ton) :) *************** */
 
@@ -2763,7 +2816,7 @@ static void make_vertexcosnos__mapFunc(void *userData, int index, const float co
 /* this is needed for all code using vertexgroups (no subsurf support) */
 /* it stores the normals as floats, but they can still be scaled as shorts (32767 = unit) */
 /* in use now by vertex/weight paint and particle generating */
-
+#if 0
 DMCoNo *mesh_get_mapped_verts_nors(Scene *scene, Object *ob)
 {
 	Mesh *me = ob->data;
@@ -2792,7 +2845,6 @@ DMCoNo *mesh_get_mapped_verts_nors(Scene *scene, Object *ob)
 	dm->release(dm);
 	return vertexcosnos;
 }
-
 #endif
 
 /* same as above but for vert coords */
