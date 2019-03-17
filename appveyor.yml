@@ -1,0 +1,34 @@
+branches:
+  only:
+    - test-build
+
+image: Visual Studio 2017
+
+clone_folder: c:\projects\upbge-git\upbge
+clone_depth: 5
+
+cache:
+  - c:\projects\upbge-git\lib
+
+install:
+  - >
+    cd c:\projects\upbge-git && if not exist .\lib
+    svn checkout -q https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc14 lib/win64_vc14
+  - >
+    cd c:\projects\upbge-git\upbge &&
+    git submodule update --init --recursive &&
+    git submodule foreach git checkout master &&
+    git submodule foreach git pull --rebase origin master
+
+platform: x64
+
+configuration: Debug
+
+build_script:
+  - >
+    cd c:\projects\upbge-git\upbge &&
+    make full builddir upbge\build\upbge-debug &&
+    7z a build\upbge.zip build\upbge-debug
+
+artifacts:
+  - path: build\upbge.zip
